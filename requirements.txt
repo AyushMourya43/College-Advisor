@@ -1,0 +1,11 @@
+streamlit
+pandas
+requests
+beautifulsoup4
+selenium
+psycopg2-binary
+sentence-transformers
+groq
+plotly
+python-dotenv
+openpyxl
