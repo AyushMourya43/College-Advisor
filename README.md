@@ -6,7 +6,7 @@ students find colleges based on their location and preferences, since income
 levels and access vary widely across India.
 
 ## 🔗 Live Demo
-_(add link after deployment)_
+https://college-advisor-izt2krlv49h8cboiuozmdj.streamlit.app/
 
 ## 📊 What it does
 
