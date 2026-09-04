@@ -19,6 +19,19 @@ jobs:
 
       - run: pip install psycopg2-binary
 
+      - name: Check secret is configured
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::Repository secret DATABASE_URL is not set."
+            echo "Add it at: Settings > Secrets and variables > Actions > New repository secret"
+            echo "Use the Supabase *session pooler* URI (IPv4). Any '@' in the password"
+            echo "must be percent-encoded as %40, or the URL will parse incorrectly."
+            exit 1
+          fi
+          echo "DATABASE_URL is set (${#DATABASE_URL} chars)"
+
       - name: Ping database
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -32,6 +45,8 @@ jobs:
               print(f"OK - {cur.fetchone()[0]} colleges reachable")
               cur.close(); conn.close()
           except Exception as e:
+              # Exception text me connection string ho sakti hai -- sirf type print karo
               print(f"Keep-alive failed: {type(e).__name__}", file=sys.stderr)
+              print("Hint: password me '@' hai to URL me %40 hona chahiye.", file=sys.stderr)
               sys.exit(1)
           EOF
