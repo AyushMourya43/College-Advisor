@@ -46,7 +46,8 @@ st.markdown("""
 
 
 def connect_to_db():
-    return psycopg2.connect(DATABASE_URL)
+    # connect_timeout se app hang hone ke bajaye jaldi fail hoti hai
+    return psycopg2.connect(DATABASE_URL, connect_timeout=10)
 
 
 @st.cache_data(ttl=3600)
@@ -94,7 +95,14 @@ def get_college_details(college_name):
 st.title("🎓 College Advisor")
 st.caption("Find the right college based on your location and preferences — powered by AISHE data")
 
-df = load_overview_data()
+try:
+    df = load_overview_data()
+except psycopg2.OperationalError:
+    st.error(
+        "⚠️ Database is temporarily unavailable — it may be waking up. "
+        "Please refresh in a minute."
+    )
+    st.stop()
 
 # ---- Top metrics row ----
 m1, m2, m3 = st.columns(3)
@@ -173,7 +181,11 @@ lookup_name = st.text_input("Enter college name", placeholder="e.g. Bharati Vidy
 
 if st.button("Look Up"):
     if lookup_name:
-        results = get_college_details(lookup_name)
+        try:
+            results = get_college_details(lookup_name)
+        except psycopg2.OperationalError:
+            st.error("⚠️ Database is temporarily unavailable. Please try again shortly.")
+            st.stop()
         if results.empty:
             st.warning("No matching college found.")
         else:
@@ -215,6 +227,11 @@ if st.button("Search", type="primary"):
         st.warning("Please enter what you're looking for.")
     else:
         state_filter = None if selected_state == "Any" else selected_state
-        with st.spinner("Finding colleges for you..."):
-            result = get_recommendations(user_query, state=state_filter)
-        st.markdown(result)
+        try:
+            with st.spinner("Finding colleges for you..."):
+                result = get_recommendations(user_query, state=state_filter)
+            st.markdown(result)
+        except psycopg2.OperationalError:
+            st.error("⚠️ Database is temporarily unavailable. Please try again shortly.")
+        except Exception:
+            st.error("⚠️ Could not generate a recommendation right now. Please try again.")

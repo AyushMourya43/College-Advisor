@@ -32,6 +32,7 @@ def get_download_url():
             AIKOSH_API_BASE_URL,
             params=params,
             headers=headers,
+            timeout=30,
         )
 
         response.raise_for_status()
@@ -75,7 +76,7 @@ def download_and_extract(download_url):
 
     try:
 
-        response = requests.get(download_url)
+        response = requests.get(download_url, timeout=300)
 
         response.raise_for_status()
 

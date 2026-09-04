@@ -30,7 +30,7 @@ https://college-advisor-izt2krlv49h8cboiuozmdj.streamlit.app/
 | Embeddings | sentence-transformers (`all-MiniLM-L6-v2`) |
 | LLM | Groq (`openai/gpt-oss-120b`) |
 | UI | Streamlit |
-| Automation | GitHub Actions (scheduled data refresh) |
+| Automation | GitHub Actions (scheduled DB keep-alive) |
 
 ## 🔄 Data Pipeline
 
