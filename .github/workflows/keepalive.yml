@@ -1,11 +1,11 @@
 name: Supabase Keep-Alive
 
-# Supabase free tier 7 din inactivity ke baad project pause kar deta hai.
-# Ye har 3 din ek chhoti query maarke inactivity counter reset kar deta hai.
+# Supabase pauses free-tier projects after 7 days of inactivity.
+# This runs a small query every 3 days to reset the inactivity counter.
 on:
   schedule:
-    - cron: "0 6 */3 * *"   # har 3 din, 06:00 UTC
-  workflow_dispatch:         # manually bhi chala sakte ho
+    - cron: "0 6 */3 * *"   # every 3 days at 06:00 UTC
+  workflow_dispatch:         # allows a manual run
 
 jobs:
   ping:
@@ -26,7 +26,7 @@ jobs:
           if [ -z "$DATABASE_URL" ]; then
             echo "::error::Repository secret DATABASE_URL is not set."
             echo "Add it at: Settings > Secrets and variables > Actions > New repository secret"
-            echo "Use the Supabase *session pooler* URI (IPv4). Any '@' in the password"
+            echo "Use the Supabase session pooler URI (IPv4). Any '@' in the password"
             echo "must be percent-encoded as %40, or the URL will parse incorrectly."
             exit 1
           fi
@@ -45,8 +45,9 @@ jobs:
               print(f"OK - {cur.fetchone()[0]} colleges reachable")
               cur.close(); conn.close()
           except Exception as e:
-              # Exception text me connection string ho sakti hai -- sirf type print karo
+              # The exception text can contain the connection string, so only
+              # the exception type is printed here.
               print(f"Keep-alive failed: {type(e).__name__}", file=sys.stderr)
-              print("Hint: password me '@' hai to URL me %40 hona chahiye.", file=sys.stderr)
+              print("Hint: an '@' in the password must be encoded as %40.", file=sys.stderr)
               sys.exit(1)
           EOF

@@ -46,7 +46,7 @@ st.markdown("""
 
 
 def connect_to_db():
-    # connect_timeout se app hang hone ke bajaye jaldi fail hoti hai
+    # connect_timeout makes the app fail fast instead of hanging
     return psycopg2.connect(DATABASE_URL, connect_timeout=10)
 
 

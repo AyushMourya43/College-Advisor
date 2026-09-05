@@ -1,8 +1,8 @@
 """
 Supabase DATABASE_URL setup helper.
 
-Naya database password maangta hai (hidden input), sahi pooler host
-khud detect karta hai, .env update karta hai, aur connection verify karta hai.
+Prompts for the database password (hidden input), detects the correct
+pooler host, updates .env, and verifies the connection.
 
 Run:  ./venv/bin/python setup_db_url.py
 """
@@ -25,6 +25,8 @@ CANDIDATE_HOSTS = [
 
 
 def build_url(host, password):
+    # quote() matters here: an unencoded '@' in the password splits the URL
+    # at the wrong place and the connection fails with an auth error.
     user = quote(f"postgres.{PROJECT_REF}")
     return f"postgresql://{user}:{quote(password, safe='')}@{host}:5432/postgres"
 
@@ -43,7 +45,7 @@ def try_connect(url):
 
 def update_env(url):
     if not ENV_PATH.exists():
-        print(f"!! {ENV_PATH} nahi mila")
+        print(f"!! {ENV_PATH} not found")
         return
     text = ENV_PATH.read_text()
     if re.search(r"^DATABASE_URL=.*$", text, flags=re.M):
@@ -51,14 +53,14 @@ def update_env(url):
     else:
         text = text.rstrip() + f"\nDATABASE_URL={url}\n"
     ENV_PATH.write_text(text)
-    print(f"✅ .env updated ({ENV_PATH})")
+    print(f"OK - .env updated ({ENV_PATH})")
 
 
 def main():
-    print("Supabase ka NAYA database password paste kar (screen pe nahi dikhega):")
+    print("Paste the NEW Supabase database password (input is hidden):")
     password = getpass.getpass("Password: ").strip()
     if not password:
-        print("Khaali password. Abort.")
+        print("Empty password. Aborting.")
         sys.exit(1)
 
     for host in CANDIDATE_HOSTS:
@@ -68,20 +70,20 @@ def main():
             total, embedded = try_connect(url)
         except psycopg2.OperationalError as e:
             msg = str(e).strip().splitlines()[0]
-            print(f"  ❌ {msg}")
+            print(f"  FAILED: {msg}")
             continue
 
-        print(f"  ✅ Connected!")
+        print("  Connected.")
         print(f"     colleges        : {total:,}")
         print(f"     with embeddings : {embedded:,}")
         update_env(url)
-        print("\nAgla step: yahi URL Streamlit Cloud secrets aur GitHub secret me bhi daal.")
-        print("Print karne ke liye:  grep '^DATABASE_URL=' .env")
+        print("\nNext: set the same URL in Streamlit Cloud secrets and as a GitHub secret.")
+        print("To print it:  grep '^DATABASE_URL=' .env")
         return
 
-    print("\n❌ Dono pooler hosts fail ho gaye.")
-    print("   Password galat ho sakta hai, ya Connect modal se exact URI copy karke")
-    print("   seedha .env me paste kar de.")
+    print("\nBoth pooler hosts failed.")
+    print("   The password may be wrong. Otherwise copy the exact URI from the")
+    print("   Supabase Connect dialog and paste it into .env directly.")
     sys.exit(1)
 
 
